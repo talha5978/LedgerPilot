@@ -1,5 +1,5 @@
 import { redirect, Outlet, type LoaderFunctionArgs } from "react-router";
-import { LogoutButton } from "~/components/LogoutButton";
+import SidebarLayout from "~/components/Nav/nav-layout";
 import { AuthService } from "~/services/auth.service.server";
 
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -29,9 +29,9 @@ export const meta = () => {
 export default function DashboardLayout() {
 	return (
 		<div className="min-h-screen">
-			<LogoutButton />
-			{/* Your sidebar / header goes here later */}
-			<Outlet />
+			<SidebarLayout>
+				<Outlet />
+			</SidebarLayout>
 		</div>
 	);
 }

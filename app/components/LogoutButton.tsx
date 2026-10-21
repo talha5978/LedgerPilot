@@ -33,7 +33,7 @@ export function LogoutButton() {
 	};
 
 	return (
-		<Button onClick={onLogout}>
+		<Button onClick={onLogout} size={"sm"}>
 			{isLoading ? <Loader2 className="mr-2 animate-spin" /> : null} Logout
 		</Button>
 	);
