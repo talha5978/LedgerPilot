@@ -4,6 +4,7 @@ export default [
 	layout("./routes/dashboard_layout.tsx", [
 		index("routes/dashboard.tsx"), // Home Dashboard
 		route("transactions", "./routes/transactions.tsx"),
+		route("transactions/:id", "./routes/transactions.$id.tsx"),
 	]),
 	route("login", "./routes/Auth/login.tsx"),
 	route("logout", "./routes/Auth/logout.ts"),
