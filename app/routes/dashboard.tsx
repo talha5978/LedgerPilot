@@ -1,21 +1,7 @@
-import { redirect, Outlet, type LoaderFunctionArgs } from "react-router";
-import SidebarLayout from "~/components/Nav/nav-layout";
-import { AuthService } from "~/services/auth.service.server";
+import { type LoaderFunctionArgs } from "react-router";
 
-export async function loader({ request }: LoaderFunctionArgs) {
-	const auth = new AuthService(request);
-
-	try {
-		const user = await auth.requireUser();
-		const { data } = await auth.getCurrentProfile();
-
-		return {
-			user,
-			profile: data?.profile ?? null,
-		};
-	} catch (error) {
-		throw redirect("/login");
-	}
+export async function loader({}: LoaderFunctionArgs) {
+	return null;
 }
 
 export const meta = () => {
@@ -26,12 +12,6 @@ export const meta = () => {
 	];
 };
 
-export default function DashboardLayout() {
-	return (
-		<div className="min-h-screen">
-			<SidebarLayout>
-				<Outlet />
-			</SidebarLayout>
-		</div>
-	);
+export default function DashboardHome() {
+	return <></>;
 }
