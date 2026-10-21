@@ -1,6 +1,7 @@
 import { BaseService } from "~/services/base.server.service";
 import { ApiError } from "~/utils/errors/ApiError";
 import type { User, Session } from "@supabase/supabase-js";
+import { clearCachedProfile, getCachedProfile, setCachedProfile } from "~/utils/auth-cache.server";
 
 type AuthResult<T> = {
 	data: T | null;
@@ -96,6 +97,9 @@ export class AuthService extends BaseService {
 	 */
 	async signOut(): Promise<AuthResult<boolean>> {
 		try {
+			const cookieHeader = this.request.headers.get("cookie");
+			clearCachedProfile(cookieHeader);
+
 			const { error } = await this.supabase.auth.signOut();
 
 			if (error) {
@@ -118,6 +122,17 @@ export class AuthService extends BaseService {
 	 * Get both the user and the profile in one call
 	 */
 	async getCurrentProfile() {
+		// Extract the raw cookie header from the request to use as a cache key
+		const cookieHeader = this.request.headers.get("cookie");
+
+		// Check in-memory cache first (skips Supabase API entirely)
+		const cached = getCachedProfile(cookieHeader);
+		if (cached) {
+			console.log("⚡ HIT AUTH/PROFILE CACHE");
+			return { data: cached, error: null };
+		}
+
+		// console.log("🌸 RUNNING AUTH CHECK (Calling Supabase API)...");
 		const { data: user, error: userError } = await this.getUser();
 
 		if (userError || !user) {
@@ -140,8 +155,13 @@ export class AuthService extends BaseService {
 			};
 		}
 
+		const resultData = { user, profile };
+
+		// Save into memory cache with a predictable TTL (e.g., 45 seconds)
+		setCachedProfile(cookieHeader, resultData, 45);
+
 		return {
-			data: { user, profile },
+			data: resultData,
 			error: null,
 		};
 	}
