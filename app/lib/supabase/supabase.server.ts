@@ -20,7 +20,7 @@ if (!supabaseUrl || !supabasePublishableKey) {
 export function createServerSupabaseClient(request: Request) {
 	const headers = new Headers();
 
-	return createServerClient(supabaseUrl, supabasePublishableKey, {
+	let supabase = createServerClient(supabaseUrl, supabasePublishableKey, {
 		cookies: {
 			getAll() {
 				return parseCookieHeader(request.headers.get("Cookie") ?? "");
@@ -32,4 +32,6 @@ export function createServerSupabaseClient(request: Request) {
 			},
 		},
 	});
+
+	return { supabase, headers };
 }

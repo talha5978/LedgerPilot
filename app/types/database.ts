@@ -8,7 +8,459 @@ export type Database = {
 	};
 	public: {
 		Tables: {
-			[_ in never]: never;
+			annotations: {
+				Row: {
+					anomaly_reason: string | null;
+					anomaly_type: string | null;
+					category: string | null;
+					confidence: number | null;
+					created_at: string;
+					created_by: string;
+					entity_id: string;
+					entity_type: string;
+					id: string;
+				};
+				Insert: {
+					anomaly_reason?: string | null;
+					anomaly_type?: string | null;
+					category?: string | null;
+					confidence?: number | null;
+					created_at?: string;
+					created_by?: string;
+					entity_id: string;
+					entity_type: string;
+					id?: string;
+				};
+				Update: {
+					anomaly_reason?: string | null;
+					anomaly_type?: string | null;
+					category?: string | null;
+					confidence?: number | null;
+					created_at?: string;
+					created_by?: string;
+					entity_id?: string;
+					entity_type?: string;
+					id?: string;
+				};
+				Relationships: [];
+			};
+			audit_log: {
+				Row: {
+					action_type: string;
+					created_at: string;
+					details: Json | null;
+					entity_id: string | null;
+					entity_type: string | null;
+					id: string;
+					performed_by: string;
+					profile_id: string;
+					result: string | null;
+				};
+				Insert: {
+					action_type: string;
+					created_at?: string;
+					details?: Json | null;
+					entity_id?: string | null;
+					entity_type?: string | null;
+					id?: string;
+					performed_by: string;
+					profile_id: string;
+					result?: string | null;
+				};
+				Update: {
+					action_type?: string;
+					created_at?: string;
+					details?: Json | null;
+					entity_id?: string | null;
+					entity_type?: string | null;
+					id?: string;
+					performed_by?: string;
+					profile_id?: string;
+					result?: string | null;
+				};
+				Relationships: [
+					{
+						foreignKeyName: "audit_log_profile_id_fkey";
+						columns: ["profile_id"];
+						isOneToOne: false;
+						referencedRelation: "profiles";
+						referencedColumns: ["id"];
+					},
+				];
+			};
+			clients: {
+				Row: {
+					created_at: string;
+					email: string | null;
+					id: string;
+					name: string;
+					notes: string | null;
+					paypal_payer_id: string | null;
+					profile_id: string;
+					updated_at: string;
+				};
+				Insert: {
+					created_at?: string;
+					email?: string | null;
+					id?: string;
+					name: string;
+					notes?: string | null;
+					paypal_payer_id?: string | null;
+					profile_id: string;
+					updated_at?: string;
+				};
+				Update: {
+					created_at?: string;
+					email?: string | null;
+					id?: string;
+					name?: string;
+					notes?: string | null;
+					paypal_payer_id?: string | null;
+					profile_id?: string;
+					updated_at?: string;
+				};
+				Relationships: [
+					{
+						foreignKeyName: "clients_profile_id_fkey";
+						columns: ["profile_id"];
+						isOneToOne: false;
+						referencedRelation: "profiles";
+						referencedColumns: ["id"];
+					},
+				];
+			};
+			invoices: {
+				Row: {
+					amount: number;
+					client_id: string;
+					created_at: string;
+					currency: string;
+					description: string | null;
+					due_date: string | null;
+					id: string;
+					invoice_number: string | null;
+					issue_date: string | null;
+					line_items: Json | null;
+					paypal_invoice_id: string | null;
+					profile_id: string;
+					raw_paypal: Json | null;
+					source: string;
+					status: string;
+					updated_at: string;
+				};
+				Insert: {
+					amount: number;
+					client_id: string;
+					created_at?: string;
+					currency?: string;
+					description?: string | null;
+					due_date?: string | null;
+					id?: string;
+					invoice_number?: string | null;
+					issue_date?: string | null;
+					line_items?: Json | null;
+					paypal_invoice_id?: string | null;
+					profile_id: string;
+					raw_paypal?: Json | null;
+					source?: string;
+					status?: string;
+					updated_at?: string;
+				};
+				Update: {
+					amount?: number;
+					client_id?: string;
+					created_at?: string;
+					currency?: string;
+					description?: string | null;
+					due_date?: string | null;
+					id?: string;
+					invoice_number?: string | null;
+					issue_date?: string | null;
+					line_items?: Json | null;
+					paypal_invoice_id?: string | null;
+					profile_id?: string;
+					raw_paypal?: Json | null;
+					source?: string;
+					status?: string;
+					updated_at?: string;
+				};
+				Relationships: [
+					{
+						foreignKeyName: "invoices_client_id_fkey";
+						columns: ["client_id"];
+						isOneToOne: false;
+						referencedRelation: "clients";
+						referencedColumns: ["id"];
+					},
+					{
+						foreignKeyName: "invoices_profile_id_fkey";
+						columns: ["profile_id"];
+						isOneToOne: false;
+						referencedRelation: "profiles";
+						referencedColumns: ["id"];
+					},
+				];
+			};
+			matches: {
+				Row: {
+					amount_matched: number;
+					confidence: number | null;
+					created_at: string;
+					created_by: string;
+					id: string;
+					invoice_id: string;
+					match_type: string;
+					reasoning: string | null;
+					status: string;
+					transaction_id: string;
+				};
+				Insert: {
+					amount_matched: number;
+					confidence?: number | null;
+					created_at?: string;
+					created_by?: string;
+					id?: string;
+					invoice_id: string;
+					match_type: string;
+					reasoning?: string | null;
+					status?: string;
+					transaction_id: string;
+				};
+				Update: {
+					amount_matched?: number;
+					confidence?: number | null;
+					created_at?: string;
+					created_by?: string;
+					id?: string;
+					invoice_id?: string;
+					match_type?: string;
+					reasoning?: string | null;
+					status?: string;
+					transaction_id?: string;
+				};
+				Relationships: [
+					{
+						foreignKeyName: "matches_invoice_id_fkey";
+						columns: ["invoice_id"];
+						isOneToOne: false;
+						referencedRelation: "invoices";
+						referencedColumns: ["id"];
+					},
+					{
+						foreignKeyName: "matches_transaction_id_fkey";
+						columns: ["transaction_id"];
+						isOneToOne: false;
+						referencedRelation: "transactions";
+						referencedColumns: ["id"];
+					},
+				];
+			};
+			pending_actions: {
+				Row: {
+					action_type: string;
+					decided_at: string | null;
+					decided_by: string | null;
+					id: string;
+					payload: Json;
+					profile_id: string;
+					proposed_at: string;
+					reasoning: string | null;
+					related_invoice_id: string | null;
+					related_transaction_id: string | null;
+					status: string;
+				};
+				Insert: {
+					action_type: string;
+					decided_at?: string | null;
+					decided_by?: string | null;
+					id?: string;
+					payload: Json;
+					profile_id: string;
+					proposed_at?: string;
+					reasoning?: string | null;
+					related_invoice_id?: string | null;
+					related_transaction_id?: string | null;
+					status?: string;
+				};
+				Update: {
+					action_type?: string;
+					decided_at?: string | null;
+					decided_by?: string | null;
+					id?: string;
+					payload?: Json;
+					profile_id?: string;
+					proposed_at?: string;
+					reasoning?: string | null;
+					related_invoice_id?: string | null;
+					related_transaction_id?: string | null;
+					status?: string;
+				};
+				Relationships: [
+					{
+						foreignKeyName: "pending_actions_decided_by_fkey";
+						columns: ["decided_by"];
+						isOneToOne: false;
+						referencedRelation: "profiles";
+						referencedColumns: ["id"];
+					},
+					{
+						foreignKeyName: "pending_actions_profile_id_fkey";
+						columns: ["profile_id"];
+						isOneToOne: false;
+						referencedRelation: "profiles";
+						referencedColumns: ["id"];
+					},
+					{
+						foreignKeyName: "pending_actions_related_invoice_id_fkey";
+						columns: ["related_invoice_id"];
+						isOneToOne: false;
+						referencedRelation: "invoices";
+						referencedColumns: ["id"];
+					},
+					{
+						foreignKeyName: "pending_actions_related_transaction_id_fkey";
+						columns: ["related_transaction_id"];
+						isOneToOne: false;
+						referencedRelation: "transactions";
+						referencedColumns: ["id"];
+					},
+				];
+			};
+			profiles: {
+				Row: {
+					created_at: string;
+					email: string | null;
+					full_name: string | null;
+					id: string;
+					paypal_merchant_id: string | null;
+					updated_at: string;
+				};
+				Insert: {
+					created_at?: string;
+					email?: string | null;
+					full_name?: string | null;
+					id: string;
+					paypal_merchant_id?: string | null;
+					updated_at?: string;
+				};
+				Update: {
+					created_at?: string;
+					email?: string | null;
+					full_name?: string | null;
+					id?: string;
+					paypal_merchant_id?: string | null;
+					updated_at?: string;
+				};
+				Relationships: [];
+			};
+			transactions: {
+				Row: {
+					amount: number;
+					client_id: string | null;
+					created_at: string;
+					currency: string;
+					fee_amount: number | null;
+					id: string;
+					net_amount: number | null;
+					payer_email: string | null;
+					payer_name: string | null;
+					paypal_transaction_id: string | null;
+					profile_id: string;
+					raw_paypal: Json | null;
+					source: string;
+					status: string | null;
+					transaction_date: string | null;
+					type: string | null;
+					updated_at: string;
+				};
+				Insert: {
+					amount: number;
+					client_id?: string | null;
+					created_at?: string;
+					currency?: string;
+					fee_amount?: number | null;
+					id?: string;
+					net_amount?: number | null;
+					payer_email?: string | null;
+					payer_name?: string | null;
+					paypal_transaction_id?: string | null;
+					profile_id: string;
+					raw_paypal?: Json | null;
+					source?: string;
+					status?: string | null;
+					transaction_date?: string | null;
+					type?: string | null;
+					updated_at?: string;
+				};
+				Update: {
+					amount?: number;
+					client_id?: string | null;
+					created_at?: string;
+					currency?: string;
+					fee_amount?: number | null;
+					id?: string;
+					net_amount?: number | null;
+					payer_email?: string | null;
+					payer_name?: string | null;
+					paypal_transaction_id?: string | null;
+					profile_id?: string;
+					raw_paypal?: Json | null;
+					source?: string;
+					status?: string | null;
+					transaction_date?: string | null;
+					type?: string | null;
+					updated_at?: string;
+				};
+				Relationships: [
+					{
+						foreignKeyName: "transactions_client_id_fkey";
+						columns: ["client_id"];
+						isOneToOne: false;
+						referencedRelation: "clients";
+						referencedColumns: ["id"];
+					},
+					{
+						foreignKeyName: "transactions_profile_id_fkey";
+						columns: ["profile_id"];
+						isOneToOne: false;
+						referencedRelation: "profiles";
+						referencedColumns: ["id"];
+					},
+				];
+			};
+			webhook_events: {
+				Row: {
+					event_type: string;
+					id: string;
+					payload: Json;
+					paypal_event_id: string | null;
+					processed: boolean;
+					processed_at: string | null;
+					processing_error: string | null;
+					received_at: string;
+				};
+				Insert: {
+					event_type: string;
+					id?: string;
+					payload: Json;
+					paypal_event_id?: string | null;
+					processed?: boolean;
+					processed_at?: string | null;
+					processing_error?: string | null;
+					received_at?: string;
+				};
+				Update: {
+					event_type?: string;
+					id?: string;
+					payload?: Json;
+					paypal_event_id?: string | null;
+					processed?: boolean;
+					processed_at?: string | null;
+					processing_error?: string | null;
+					received_at?: string;
+				};
+				Relationships: [];
+			};
 		};
 		Views: {
 			[_ in never]: never;
