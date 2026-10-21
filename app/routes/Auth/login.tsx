@@ -31,11 +31,19 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	const { data: user } = await auth.getUser();
 
 	if (user) {
-		return redirect("/dashboard");
+		return redirect("/");
 	}
 
 	return null;
 }
+
+export const meta = () => {
+	return [
+		{
+			title: "Login | LedgerPilot",
+		},
+	];
+};
 
 // --------------------------------------------------
 // Action
@@ -58,7 +66,7 @@ export async function action({ request }: ActionFunctionArgs) {
 	}
 
 	const auth = new AuthService(request);
-	const { error, data } = await auth.signInWithPassword({
+	const { error } = await auth.signInWithPassword({
 		email: parsed.data.email,
 		password: parsed.data.password,
 	});
@@ -70,9 +78,7 @@ export async function action({ request }: ActionFunctionArgs) {
 		};
 	}
 
-	console.log(data);
-
-	return redirect("/dashboard", {
+	return redirect("/", {
 		headers: auth.headers,
 	});
 }
