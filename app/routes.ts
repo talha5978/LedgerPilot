@@ -7,7 +7,10 @@ export default [
 		route("transactions/:id", "./routes/transactions.$id.tsx"),
 		route("invoices", "./routes/invoices.tsx"),
 		route("invoices/:id", "./routes/invoices.$id.ts"),
+		route("approvals", "./routes/approvals.tsx"),
 	]),
+	route("agent/run", "./routes/api.agent.run.ts"),
+	route("webhooks/paypal", "./routes/webhooks.paypal.ts"),
 	route("login", "./routes/Auth/login.tsx"),
 	route("logout", "./routes/Auth/logout.ts"),
 ] satisfies RouteConfig;

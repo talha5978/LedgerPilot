@@ -1,11 +1,7 @@
 import { BaseService } from "~/services/base.server.service";
 import type { Database } from "~/types/database";
+import type { ServiceResult } from "~/types/service-result";
 import { ApiError } from "~/utils/errors/ApiError";
-
-type ServiceResult<T> = {
-	data: T | null;
-	error: ApiError | null;
-};
 
 type InvoiceRow = Database["public"]["Tables"]["invoices"]["Row"];
 type ClientRow = Database["public"]["Tables"]["clients"]["Row"];
