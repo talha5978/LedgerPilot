@@ -1,5 +1,5 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
-import { useLoaderData, useSubmit, useNavigation } from "react-router";
+import { useLoaderData, useSubmit, useNavigation, useActionData } from "react-router";
 import { ApprovalsService, type PendingActionWithDetails } from "~/services/approvals.service.server";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "~/components/ui/card";
@@ -17,6 +17,8 @@ import {
 	Mail,
 	DollarSign,
 } from "lucide-react";
+import { useEffect } from "react";
+import { toast } from "sonner";
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const approvalsService = new ApprovalsService(request);
@@ -61,6 +63,18 @@ export default function ApprovalsPage() {
 	const navigation = useNavigation();
 
 	const isSubmitting = navigation.state === "submitting";
+
+	const actionData = useActionData();
+
+	useEffect(() => {
+		if (actionData) {
+			if (actionData.error) {
+				toast.error(actionData.error);
+			} else {
+				toast.success(actionData.message);
+			}
+		}
+	}, [actionData]);
 
 	const handleDecision = (actionId: string, intent: "approve" | "reject") => {
 		const formData = new FormData();
