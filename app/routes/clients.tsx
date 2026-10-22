@@ -5,17 +5,7 @@ import { ClientsService, type ClientWithStats } from "~/services/clients.service
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { Badge } from "~/components/ui/badge";
 import { Input } from "~/components/ui/input";
-import {
-	Users,
-	Search,
-	Mail,
-	Building,
-	FileText,
-	DollarSign,
-	Clock,
-	CheckCircle2,
-	AlertCircle,
-} from "lucide-react";
+import { Users, Search, Mail, FileText, DollarSign, AlertCircle } from "lucide-react";
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const clientsService = new ClientsService(request);
@@ -118,12 +108,6 @@ export default function ClientsPage() {
 											<CardTitle className="text-base font-semibold tracking-tight truncate">
 												{client.name || "Unnamed Client"}
 											</CardTitle>
-											{client.company_name && (
-												<div className="flex items-center gap-1 text-xs text-muted-foreground truncate">
-													<Building className="w-3 h-3 shrink-0" />
-													<span className="truncate">{client.company_name}</span>
-												</div>
-											)}
 										</div>
 										<Badge
 											variant={client.outstanding_balance > 0 ? "outline" : "secondary"}
