@@ -18,6 +18,7 @@ import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Progress } from "~/components/ui/progress";
 import { DashboardService } from "~/services/dashboard.service.server";
+import { InvoiceStatusChart } from "~/components/invoice-status-chart";
 
 export const meta = () => {
 	return [{ title: "Dashboard | LedgerPilot" }];
@@ -55,7 +56,7 @@ function actionLabel(type: string) {
 // Page
 // --------------------------------------------------
 export default function DashboardPage() {
-	const { kpis, pending, recentTx, recentAudit, anomalies, overdueInvoices } =
+	const { kpis, pending, recentTx, recentAudit, anomalies, overdueInvoices, invoices } =
 		useLoaderData<typeof loader>();
 
 	const attentionScore = kpis.pendingCount + kpis.overdueCount + Math.min(kpis.unmatchedCount, 10);
@@ -304,8 +305,11 @@ export default function DashboardPage() {
 					</Card>
 				</div>
 
-				{/* Right: activity + anomalies + health */}
+				{/* Right: AG Chart + activity + anomalies + health */}
 				<div className="space-y-6 lg:col-span-2">
+					{/* Free AG Chart Component */}
+					<InvoiceStatusChart invoices={invoices} />
+
 					{/* Reconciliation health */}
 					<Card className="shadow-sm">
 						<CardHeader className="pb-2">

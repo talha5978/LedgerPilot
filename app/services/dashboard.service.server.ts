@@ -103,6 +103,7 @@ export class DashboardService extends BaseService {
 			recentAudit: recentAudit.data || [],
 			anomalies: anomalies.data || [],
 			overdueInvoices: overdueInvoices.slice(0, 5),
+			invoices,
 		};
 	}
 
