@@ -5,6 +5,7 @@ import "./app.css";
 // import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-quartz.css";
 import { Toaster } from "~/components/ui/sonner";
+import { TopLoadingBar } from "~/components/Loaders/TopLoadingBar";
 
 export const links: Route.LinksFunction = () => [
 	{ rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -40,6 +41,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 export default function App() {
 	return (
 		<>
+			<TopLoadingBar />
 			<Toaster />
 			<Outlet />
 		</>

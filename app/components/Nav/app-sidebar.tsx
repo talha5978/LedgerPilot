@@ -20,7 +20,7 @@ export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
 					<SidebarMenuItem>
 						<SidebarMenuButton asChild className="data-[slot=sidebar-menu-button]:p-1.5!">
 							<Link to="/" prefetch="intent">
-								LedgerPilot
+								<img src="/logo.png" alt="" className="w-32 mix-blend-multiply" />
 							</Link>
 						</SidebarMenuButton>
 					</SidebarMenuItem>

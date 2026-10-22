@@ -113,8 +113,11 @@ export default function LoginPage() {
 		<div className="min-h-screen flex">
 			{/* Left side – subtle background */}
 			<div className="hidden lg:flex lg:w-1/2 bg-muted items-center justify-center p-12">
-				<div className="max-w-md space-y-4">
-					<h1 className="text-3xl font-semibold tracking-tight">LedgerPilot</h1>
+				<div className="max-w-md space-y-1">
+					<div>
+						<img src="/logo.png" className="w-40 mix-blend-multiply" alt="LedgerPilot" />
+					</div>
+					{/* <h1 className="text-3xl font-semibold tracking-tight">LedgerPilot</h1> */}
 					<p className="text-muted-foreground text-lg">
 						Your AI finance assistant for PayPal. Reconcile payments, catch anomalies, and stay in
 						control.
@@ -126,7 +129,10 @@ export default function LoginPage() {
 			<div className="flex-1 flex items-center justify-center p-6 sm:p-12">
 				<Card className="w-full max-w-md border-0 shadow-none sm:border sm:shadow-sm">
 					<CardHeader className="space-y-1">
-						<CardTitle className="text-2xl">Sign in</CardTitle>
+						<CardTitle className="text-2xl flex gap-2 items-center">
+							<img src="/logo_icon.png" className="w-8 mix-blend-multiply" alt="" />
+							<span>Sign in</span>
+						</CardTitle>
 						<CardDescription>Enter your email and password to continue</CardDescription>
 					</CardHeader>
 
