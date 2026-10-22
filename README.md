@@ -1,6 +1,13 @@
-# LedgerPilot
+<p align="center">
+  <img
+    src="./public/logo.png"
+    alt="Logo"
+    width="200"
+    style="mix-blend-mode: multiply;"
+  />
+</p>
 
-**AI-assisted PayPal finance control for freelancers**
+<p align="center"><b><i>AI-assisted PayPal finance control for freelancers</i></b></p>
 
 LedgerPilot helps freelancers turn messy PayPal activity into a clear picture of who paid what, what is still owed, and what needs a human decision before any money-moving action runs.
 
