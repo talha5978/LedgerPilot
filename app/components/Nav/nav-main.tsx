@@ -18,7 +18,6 @@ import {
 	Users,
 	ScrollText,
 	FlaskConical,
-	Settings,
 } from "lucide-react";
 import type { NavSubItem, NavItem } from "~/types/nav";
 
@@ -67,7 +66,7 @@ export const mainNavItems: NavItem[] = [
 		title: "System",
 		items: [
 			{
-				title: "Audit Log",
+				title: "Audit Logs",
 				url: "/audit",
 				icon: <ScrollText />,
 			},
@@ -75,11 +74,6 @@ export const mainNavItems: NavItem[] = [
 				title: "Demo Controls",
 				url: "/demo",
 				icon: <FlaskConical />,
-			},
-			{
-				title: "Settings",
-				url: "/settings",
-				icon: <Settings />,
 			},
 		],
 	},
