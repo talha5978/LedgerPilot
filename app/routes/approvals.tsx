@@ -135,22 +135,20 @@ export default function ApprovalsPage() {
 
 			{/* Empty State */}
 			{pendingActions.length === 0 ? (
-				<Card className="text-center py-16 border-dashed border-2 border-border/60 bg-card/50 max-w-xl mx-auto">
-					<CardContent className="space-y-4">
-						<div className="w-14 h-14 rounded-full bg-accent/50 border border-border flex items-center justify-center mx-auto text-primary">
-							<Check className="w-7 h-7" />
-						</div>
-						<div className="space-y-1">
-							<h3 className="text-lg font-semibold tracking-tight">
-								All clear! No pending actions
-							</h3>
-							<p className="text-sm text-muted-foreground max-w-md mx-auto">
-								The background agent has no pending proposals waiting for review. New
-								suggestions will appear here automatically.
-							</p>
-						</div>
-					</CardContent>
-				</Card>
+				<div className="space-y-4 py-16 *:mx-auto">
+					<div className="w-14 h-14 rounded-full bg-accent/50 border border-border flex items-center justify-center mx-auto text-primary">
+						<Check className="w-7 h-7" />
+					</div>
+					<div className="space-y-1 w-fit text-center">
+						<h3 className="text-lg font-semibold tracking-tight">
+							All clear! No pending actions
+						</h3>
+						<p className="text-sm text-muted-foreground max-w-md">
+							The background agent has no pending proposals waiting for review. New suggestions
+							will appear here automatically.
+						</p>
+					</div>
+				</div>
 			) : (
 				/* Multi-column Grid Layout (Not Wide Cards) */
 				<div className="grid grid-cols-1 md:grid-cols-2 gap-5">

@@ -1,13 +1,28 @@
+// app/services/agent.service.server.ts
 import { BaseService } from "~/services/base.server.service";
 import { checkOverdueInvoices, runRuleEngine } from "~/utils/rule-engine.server";
 import { ApiError } from "~/utils/errors/ApiError";
 import { AgentToolsService } from "~/services/agent.tools.server";
+import { GeminiService } from "~/services/gemini.service.server";
 import type { ServiceResult } from "~/types/service-result";
 
+type LlmDecision = {
+	matches?: Array<{
+		invoice_id: string;
+		amount_matched: number;
+		confidence: number;
+		reasoning: string;
+	}>;
+	category?: string | null;
+	anomaly?: {
+		type: string;
+		reason: string;
+		confidence: number;
+	} | null;
+	notes?: string;
+};
+
 export class AgentService extends BaseService {
-	/**
-	 * Runs agent logic for a specific transaction (matching, anomaly detection)
-	 */
 	async runForTransaction(transactionId: string): Promise<ServiceResult<any>> {
 		try {
 			const profileId = await this.getProfileId();
@@ -23,7 +38,6 @@ export class AgentService extends BaseService {
 				return { data: null, error: new ApiError("Transaction not found", 404) };
 			}
 
-			// 1. Open invoices — MUST use schema lowercase statuses
 			const { data: openInvoices } = await this.supabase
 				.from(this.INVOICES_TABLE)
 				.select("id, invoice_number, amount, currency, client_id")
@@ -52,7 +66,6 @@ export class AgentService extends BaseService {
 				client_id: inv.client_id,
 			}));
 
-			// 2. Rule engine
 			const ruleResult = runRuleEngine(
 				{
 					id: txn.id,
@@ -67,8 +80,9 @@ export class AgentService extends BaseService {
 
 			const toolsService = new AgentToolsService(this.request);
 			const actions: string[] = [];
+			let simplePartialHandled = false;
 
-			// Strong rule match → apply via tools
+			// Strong rule match
 			if (ruleResult.match_type !== "none" && ruleResult.confidence >= 0.9) {
 				const matchRes = await toolsService.matchPayment({
 					transactionId: txn.id,
@@ -93,9 +107,8 @@ export class AgentService extends BaseService {
 				};
 			}
 
-			// ----- Agent reviews (no strong rule match) -----
+			// ----- Deterministic agent checks (no LLM) -----
 
-			// 3. Link client by payer email if known
 			const payerEmail = (txn.payer_email || "").toLowerCase().trim();
 			if (payerEmail) {
 				const { data: knownClient } = await this.supabase
@@ -122,7 +135,6 @@ export class AgentService extends BaseService {
 				}
 			}
 
-			// 4. Fee spike — fee ≥ 5% of gross (typical PayPal ~2.9%)
 			const gross = Number(txn.amount) || 0;
 			const fee = Number(txn.fee_amount) || 0;
 			const feeRatio = gross > 0 ? fee / gross : 0;
@@ -138,7 +150,6 @@ export class AgentService extends BaseService {
 				actions.push("fee_spike");
 			}
 
-			// 5. Duplicate — same amount + email, other payment rows
 			const { data: duplicateCheck } = await this.supabase
 				.from(this.TRANSACTIONS_TABLE)
 				.select("id, paypal_transaction_id, transaction_date")
@@ -176,7 +187,6 @@ export class AgentService extends BaseService {
 				}
 			}
 
-			// 6. Partial payment proposal — one open invoice, same email, amount < invoice
 			const partialCandidates = formattedInvoices.filter(
 				(inv) =>
 					inv.client_email === payerEmail &&
@@ -190,7 +200,7 @@ export class AgentService extends BaseService {
 					transactionId: txn.id,
 					invoiceId: inv.id,
 					amountMatched: Number(txn.amount),
-					confidence: 0.85, // proposed, not auto-approved
+					confidence: 0.85,
 					reasoning: `Partial payment: $${txn.amount} toward invoice #${inv.invoice_number} ($${inv.amount}). Remaining $${(inv.amount - Number(txn.amount)).toFixed(2)}.`,
 				});
 				if (inv.client_id) {
@@ -200,6 +210,25 @@ export class AgentService extends BaseService {
 						.eq("id", txn.id);
 				}
 				actions.push("partial_proposed");
+				simplePartialHandled = true;
+			}
+
+			// ----- LLM only if still ambiguous and we have invoices to reason about -----
+			const needsLlm =
+				!simplePartialHandled && formattedInvoices.length > 0 && ruleResult.match_type === "none";
+
+			if (needsLlm) {
+				const llmResult = await this.runLlmReconciliation({
+					txn,
+					openInvoices: formattedInvoices,
+					toolsService,
+				});
+				if (llmResult.actions.length) {
+					actions.push(...llmResult.actions);
+				}
+				if (llmResult.error) {
+					actions.push("llm_error");
+				}
 			}
 
 			await this.logAudit("agent_reviewed", "transaction", txn.id, { actions });
@@ -221,8 +250,123 @@ export class AgentService extends BaseService {
 	}
 
 	/**
-	 * Draft reminders for overdue invoices → pending_actions
+	 * Light Gemini pass — structured JSON only, then execute via tools.
 	 */
+	private async runLlmReconciliation(ctx: {
+		txn: any;
+		openInvoices: Array<{
+			id: string;
+			invoice_number: string;
+			amount: number;
+			currency: string;
+			client_email: string;
+			client_id: string;
+		}>;
+		toolsService: AgentToolsService;
+	}): Promise<{ actions: string[]; error?: string }> {
+		const actions: string[] = [];
+		const gemini = new GeminiService();
+
+		const system = `You are LedgerPilot, a payment reconciliation helper.
+Return ONLY valid JSON. No markdown.
+Task: suggest how to allocate this payment to open invoices.
+Rules:
+- Only use invoice ids from the provided list.
+- amount_matched values must sum to <= payment amount.
+- confidence 0 to 1. Use < 0.9 when unsure.
+- Prefer splitting a bulk payment across invoices from the same payer email when amounts add up.
+- category: short label like "Web Design" or null.
+- anomaly: null unless something looks wrong.
+JSON shape:
+{
+  "matches": [{"invoice_id":"...","amount_matched":0,"confidence":0.8,"reasoning":"..."}],
+  "category": "string or null",
+  "anomaly": {"type":"...","reason":"...","confidence":0.8} or null,
+  "notes": "optional"
+}`;
+
+		const user = JSON.stringify({
+			payment: {
+				id: ctx.txn.id,
+				amount: Number(ctx.txn.amount),
+				fee: Number(ctx.txn.fee_amount ?? 0),
+				net: Number(ctx.txn.net_amount ?? ctx.txn.amount),
+				currency: ctx.txn.currency,
+				payer_email: ctx.txn.payer_email,
+				payer_name: ctx.txn.payer_name,
+			},
+			open_invoices: ctx.openInvoices.map((i) => ({
+				id: i.id,
+				invoice_number: i.invoice_number,
+				amount: i.amount,
+				currency: i.currency,
+				client_email: i.client_email,
+			})),
+		});
+
+		const { data: decision, error } = await gemini.generateJson<LlmDecision>({
+			system,
+			user,
+			temperature: 0.1,
+		});
+
+		if (error || !decision) {
+			return { actions, error: error?.message || "LLM failed" };
+		}
+
+		const allowedIds = new Set(ctx.openInvoices.map((i) => i.id));
+		const paymentAmount = Number(ctx.txn.amount);
+
+		for (const m of decision.matches || []) {
+			if (!allowedIds.has(m.invoice_id)) continue;
+			const amount = Number(m.amount_matched);
+			if (!(amount > 0) || amount > paymentAmount + 0.01) continue;
+
+			const confidence = Math.min(1, Math.max(0, Number(m.confidence) || 0.7));
+
+			await ctx.toolsService.matchPayment({
+				transactionId: ctx.txn.id,
+				invoiceId: m.invoice_id,
+				amountMatched: amount,
+				confidence,
+				reasoning: m.reasoning || "LLM suggested match",
+			});
+
+			const inv = ctx.openInvoices.find((i) => i.id === m.invoice_id);
+			if (inv?.client_id) {
+				await this.supabase
+					.from(this.TRANSACTIONS_TABLE)
+					.update({ client_id: inv.client_id })
+					.eq("id", ctx.txn.id);
+			}
+			actions.push("llm_match");
+		}
+
+		if (decision.category) {
+			await ctx.toolsService.categorize({
+				entityId: ctx.txn.id,
+				entityType: "transaction",
+				category: String(decision.category).slice(0, 80),
+				confidence: 0.75,
+			});
+			actions.push("llm_categorize");
+		}
+
+		if (decision.anomaly?.type) {
+			await ctx.toolsService.flagAnomaly({
+				entityId: ctx.txn.id,
+				entityType: "transaction",
+				anomalyType: String(decision.anomaly.type).slice(0, 64),
+				anomalyReason: String(decision.anomaly.reason || "LLM flagged anomaly"),
+				confidence: Math.min(1, Number(decision.anomaly.confidence) || 0.7),
+			});
+			actions.push("llm_anomaly");
+		}
+
+		await this.logAudit("llm_reconciliation", "transaction", ctx.txn.id, decision);
+		return { actions };
+	}
+
 	async runOverdueCheck(): Promise<ServiceResult<any>> {
 		try {
 			const profileId = await this.getProfileId();
@@ -241,7 +385,6 @@ export class AgentService extends BaseService {
 				const inv = openInvoices?.find((i) => i.id === item.invoiceId);
 				if (!inv) continue;
 
-				// Skip if a pending reminder already exists for this invoice
 				const { data: existing } = await this.supabase
 					.from(this.PENDING_ACTIONS_TABLE)
 					.select("id")
