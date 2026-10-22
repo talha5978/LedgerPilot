@@ -13,6 +13,10 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "~/components/ui/sh
 import { Progress } from "~/components/ui/progress";
 import { InvoiceStatusBadge } from "~/components/invoice/InvoiceStatusBadge";
 
+export const meta = () => {
+	return [{ title: "Invoices | LedgerPilot" }];
+};
+
 // --------------------------------------------------
 // Loader
 // --------------------------------------------------

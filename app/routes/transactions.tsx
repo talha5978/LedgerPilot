@@ -11,6 +11,10 @@ import { Input } from "~/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "~/components/ui/sheet";
 
+export const meta = () => {
+	return [{ title: "Transactions | LedgerPilot" }];
+};
+
 // --------------------------------------------------
 // Loader
 // --------------------------------------------------

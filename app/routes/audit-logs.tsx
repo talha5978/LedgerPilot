@@ -2,7 +2,7 @@ import { useState } from "react";
 import type { LoaderFunctionArgs } from "react-router";
 import { useLoaderData, useNavigate } from "react-router";
 import { AuditService } from "~/services/audit.service.server";
-import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
+import { Card } from "~/components/ui/card";
 import { Badge } from "~/components/ui/badge";
 import { Input } from "~/components/ui/input";
 import {
@@ -17,6 +17,10 @@ import {
 	User,
 	Database,
 } from "lucide-react";
+
+export const meta = () => {
+	return [{ title: "Audit Logs | LedgerPilot" }];
+};
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const auditService = new AuditService(request);

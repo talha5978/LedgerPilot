@@ -7,6 +7,10 @@ import { Badge } from "~/components/ui/badge";
 import { Input } from "~/components/ui/input";
 import { Users, Search, Mail, FileText, DollarSign, AlertCircle } from "lucide-react";
 
+export const meta = () => {
+	return [{ title: "Clients | LedgerPilot" }];
+};
+
 export async function loader({ request }: LoaderFunctionArgs) {
 	const clientsService = new ClientsService(request);
 	const result = await clientsService.listClients();
