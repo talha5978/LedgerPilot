@@ -219,16 +219,16 @@ Run this whenever the database schema changes so `Database` types stay in sync w
 2. **Webhook URL** must be a **public HTTPS** URL pointing at your ingest route, for example:
 
 ```text
-https://YOUR_PUBLIC_HOST/api/paypal/webhook
+https://YOUR_PUBLIC_HOST/webhooks/paypal
 ```
-
-(Use the exact path defined in this repo’s routes.)
 
 3. Subscribe at least to:
 
 - `PAYMENT.CAPTURE.COMPLETED`
 - `PAYMENT.CAPTURE.REFUNDED` (and related capture events as needed)
 - `INVOICING.INVOICE.CREATED` / `PAID` / `UPDATED` / `CANCELLED` (as supported)
+
+- **(Recommended: Select All)**
 
 4. Save. PayPal will POST JSON events to your app when those actions occur in **sandbox**.
 
