@@ -71,7 +71,6 @@ export class ApprovalsService extends BaseService {
 			const profileId = await this.getProfileId();
 			const userId = await this.getUserId();
 
-			// 1. Fetch pending action record
 			const { data: actionRecord, error } = await this.supabase
 				.from(this.PENDING_ACTIONS_TABLE)
 				.select("*")
@@ -83,15 +82,22 @@ export class ApprovalsService extends BaseService {
 				return { data: null, error: new ApiError("Pending action not found", 404) };
 			}
 
-			const payload = actionRecord.payload as any;
-			const paypal = new PayPalService();
-			let paypalResult: any = null;
+			if (actionRecord.status !== "pending") {
+				return {
+					data: null,
+					error: new ApiError(`Action already ${actionRecord.status}`, 409),
+				};
+			}
 
-			// 2. Dispatch side effect to PayPalService based on action_type
+			const payload = (actionRecord.payload || {}) as any;
+			// Pass request if PayPalService extends BaseService
+			const paypal = new PayPalService();
+			let executionResult: any = { status: "executed" };
+
 			if (actionRecord.action_type === "send_invoice_reminder" && actionRecord.related_invoice_id) {
 				const { data: inv } = await this.supabase
 					.from(this.INVOICES_TABLE)
-					.select("paypal_invoice_id")
+					.select("paypal_invoice_id, invoice_number")
 					.eq("id", actionRecord.related_invoice_id)
 					.single();
 
@@ -100,40 +106,109 @@ export class ApprovalsService extends BaseService {
 						subject: payload?.subject,
 						note: payload?.note,
 					});
-					if (res.error) throw res.error;
-					paypalResult = res.data;
+					if (res.error) {
+						return { data: null, error: res.error };
+					}
+					executionResult = { mode: "paypal", data: res.data };
+				} else {
+					// Simulator / local invoice — no live PayPal id
+					executionResult = {
+						mode: "simulated",
+						message: "No PayPal invoice id; reminder approved locally only.",
+						subject: payload?.subject,
+						note: payload?.note,
+					};
 				}
 			} else if (actionRecord.action_type === "refund_capture") {
-				const res = await paypal.refundCapture(payload.capture_id, {
-					amount: payload.amount,
-				});
-				if (res.error) throw res.error;
-				paypalResult = res.data;
+				const captureId = payload?.capture_id;
+				if (!captureId) {
+					return {
+						data: null,
+						error: new ApiError("Missing capture_id in payload", 400),
+					};
+				}
+
+				const isSim =
+					String(captureId).startsWith("CAP-") ||
+					String(captureId).includes("SIM") ||
+					String(captureId).includes("DUP");
+
+				if (isSim) {
+					executionResult = {
+						mode: "simulated",
+						message: "Simulated capture; refund recorded locally only.",
+						capture_id: captureId,
+						amount: payload?.amount,
+					};
+				} else {
+					const res = await paypal.refundCapture(String(captureId), {
+						amount: payload?.amount,
+						note_to_payer: "Refund approved via LedgerPilot",
+					});
+					if (res.error) {
+						return { data: null, error: res.error };
+					}
+					executionResult = { mode: "paypal", data: res.data };
+				}
+			} else if (actionRecord.action_type === "assign_client") {
+				const clientId = payload?.client_id;
+				const txnId = actionRecord.related_transaction_id;
+				if (!clientId || !txnId) {
+					return {
+						data: null,
+						error: new ApiError("assign_client requires client_id and transaction", 400),
+					};
+				}
+				const { error: updErr } = await this.supabase
+					.from(this.TRANSACTIONS_TABLE)
+					.update({ client_id: clientId })
+					.eq("id", txnId)
+					.eq("profile_id", profileId);
+				if (updErr) {
+					return { data: null, error: new ApiError(updErr.message, 500, [updErr]) };
+				}
+				executionResult = { mode: "db", client_id: clientId, transaction_id: txnId };
+			} else {
+				// Unknown type: still allow mark executed with note, or reject
+				executionResult = {
+					mode: "noop",
+					message: `No executor for ${actionRecord.action_type}`,
+				};
 			}
 
-			// 3. Update pending_actions record status
 			const now = new Date().toISOString();
-			await this.supabase
+			const { error: updateError } = await this.supabase
 				.from(this.PENDING_ACTIONS_TABLE)
 				.update({
 					status: "executed",
 					decided_at: now,
 					decided_by: userId,
+					payload: {
+						...payload,
+						execution_result: executionResult,
+					},
 				})
-				.eq("id", actionId);
+				.eq("id", actionId)
+				.eq("status", "pending"); // optimistic lock
 
-			// 4. Log to audit_log
+			if (updateError) {
+				return {
+					data: null,
+					error: new ApiError(updateError.message, 500, [updateError]),
+				};
+			}
+
 			await this.supabase.from(this.AUDIT_LOGS_TABLE).insert({
 				profile_id: profileId,
 				action_type: `${actionRecord.action_type}_approved`,
-				entity_type: "pending_actions",
+				entity_type: "pending_action",
 				entity_id: actionId,
 				performed_by: "user",
 				result: "success",
-				details: paypalResult || { status: "executed" },
+				details: executionResult,
 			});
 
-			return { data: { success: true, result: paypalResult }, error: null };
+			return { data: { success: true, result: executionResult }, error: null };
 		} catch (err: any) {
 			return {
 				data: null,
