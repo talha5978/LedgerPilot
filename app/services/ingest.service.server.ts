@@ -118,7 +118,25 @@ export class IngestService extends BaseService {
 				await this.markWebhookFailed(eventId, error.message);
 				throw new ApiError(error.message, 500, [error]);
 			}
+
 			if (txn) createdTxnId = txn.id;
+
+			if (txn && transaction.payer_email) {
+				const email = transaction.payer_email.toLowerCase().trim();
+				const { data: client } = await this.supabase
+					.from(this.CLIENTS_TABLE)
+					.select("id")
+					.eq("profile_id", profileId)
+					.ilike("email", email)
+					.maybeSingle();
+
+				if (client) {
+					await this.supabase
+						.from(this.TRANSACTIONS_TABLE)
+						.update({ client_id: client.id })
+						.eq("id", txn.id);
+				}
+			}
 		}
 
 		// 4. Upsert invoice
