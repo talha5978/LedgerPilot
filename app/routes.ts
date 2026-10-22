@@ -10,6 +10,8 @@ export default [
 		route("approvals", "./routes/approvals.tsx"),
 		route("demo", "./routes/demo.tsx"),
 		route("clients", "./routes/clients.tsx"),
+		route("audit", "./routes/audit-logs.tsx"),
+		route("audit/:id", "./routes/audit.$.tsx"),
 	]),
 	route("agent/run", "./routes/api.agent.run.ts"),
 	route("webhooks/paypal", "./routes/webhooks.paypal.ts"),
