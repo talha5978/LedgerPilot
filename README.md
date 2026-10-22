@@ -82,6 +82,41 @@ Architecture style: **service classes** (`BaseService` → Auth, Ingest, Agent, 
 
 ---
 
+<table>
+  <tr>
+    <td width="50%" align="center">
+      <strong>Dashboard</strong><br/><br/>
+      <img src="./public/ss/dashboard.png" alt="LedgerPilot Dashboard" width="100%"/>
+    </td>
+    <td width="50%" align="center">
+      <strong>Transactions</strong><br/><br/>
+      <img src="./public/ss/transactions.png" alt="Transaction Management" width="100%"/>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center">
+      <strong>Invoices</strong><br/><br/>
+      <img src="./public/ss/invoices.png" alt="Invoice Management" width="100%"/>
+    </td>
+    <td width="50%" align="center">
+      <strong>Pending Approvals</strong><br/><br/>
+      <img src="./public/ss/pending_approvals.png" alt="Pending Approvals" width="100%"/>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center">
+      <strong>Clients</strong><br/><br/>
+      <img src="./public/ss/clients.png" alt="Client Management" width="100%"/>
+    </td>
+    <td width="50%" align="center">
+      <strong>Audit Logs</strong><br/><br/>
+      <img src="./public/ss/audit_logs.png" alt="Audit Logs" width="100%"/>
+    </td>
+  </tr>
+</table>
+
+---
+
 ## Local setup
 
 ### 1. Clone the repository
