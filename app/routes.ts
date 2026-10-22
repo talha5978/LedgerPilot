@@ -9,6 +9,7 @@ export default [
 		route("invoices/:id", "./routes/invoices.$id.ts"),
 		route("approvals", "./routes/approvals.tsx"),
 		route("demo", "./routes/demo.tsx"),
+		route("clients", "./routes/clients.tsx"),
 	]),
 	route("agent/run", "./routes/api.agent.run.ts"),
 	route("webhooks/paypal", "./routes/webhooks.paypal.ts"),
